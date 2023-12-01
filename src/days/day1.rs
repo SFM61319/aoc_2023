@@ -1,9 +1,9 @@
 #[aoc_runner_derive::aoc(day1, part1, Iterators)]
 pub fn solve_part1_iterators(input: &str) -> u32 {
-    const ZERO: u8 = b'0';
     input
         .lines()
         .map(|line| {
+            const ZERO: u8 = b'0';
             let mut digits = line
                 .bytes()
                 .filter(|ch| ch.is_ascii_digit())
