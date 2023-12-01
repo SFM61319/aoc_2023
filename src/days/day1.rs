@@ -23,96 +23,42 @@ pub fn solve_part2(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
-            const ZERO: u8 = b'0';
+            let line = line.as_bytes();
+            let mut digit1 = Option::<u8>::None;
+            let mut digit2 = Option::<u8>::None;
 
-            let text = line.as_bytes();
-            let mut digits: Vec<u8> = Vec::with_capacity(line.len());
+            for (i, ch) in line.iter().enumerate() {
+                let digit = match (
+                    ch,
+                    line.get(i + 1),
+                    line.get(i + 2),
+                    line.get(i + 3),
+                    line.get(i + 4),
+                ) {
+                    (b'0'..=b'9', _, _, _, _) => Some(ch - b'0'),
+                    (b'o', Some(b'n'), Some(b'e'), _, _) => Some(1),
+                    (b't', Some(b'w'), Some(b'o'), _, _) => Some(2),
+                    (b't', Some(b'h'), Some(b'r'), Some(b'e'), Some(b'e')) => Some(3),
+                    (b'f', Some(b'o'), Some(b'u'), Some(b'r'), _) => Some(4),
+                    (b'f', Some(b'i'), Some(b'v'), Some(b'e'), _) => Some(5),
+                    (b's', Some(b'i'), Some(b'x'), _, _) => Some(6),
+                    (b's', Some(b'e'), Some(b'v'), Some(b'e'), Some(b'n')) => Some(7),
+                    (b'e', Some(b'i'), Some(b'g'), Some(b'h'), Some(b't')) => Some(8),
+                    (b'n', Some(b'i'), Some(b'n'), Some(b'e'), _) => Some(9),
+                    _ => None,
+                };
 
-            for (i, ch) in text.iter().enumerate() {
-                if ch.is_ascii_digit() {
-                    digits.push(ch - ZERO);
-                } else {
-                    let curr = *ch;
-                    let next1 = text.get(i + 1).copied();
-                    let next2 = text.get(i + 2).copied();
-                    let next3 = text.get(i + 3).copied();
-                    let next4 = text.get(i + 4).copied();
-
-                    if curr == b'o'
-                        && next1.is_some()
-                        && next2.is_some()
-                        && next1.clone().unwrap() == b'n'
-                        && next2.clone().unwrap() == b'e'
-                    {
-                        digits.push(1);
-                    } else if curr == b't' && next1.is_some() && next2.is_some() {
-                        let next1 = next1.clone().unwrap();
-                        let next2 = next2.clone().unwrap();
-
-                        if next1 == b'w' && next2 == b'o' {
-                            digits.push(2);
-                        } else if next3.is_some() && next4.is_some() {
-                            let next3 = next3.clone().unwrap();
-                            let next4 = next4.clone().unwrap();
-
-                            if next1 == b'h' && next2 == b'r' && next3 == b'e' && next4 == b'e' {
-                                digits.push(3);
-                            }
-                        }
-                    } else if curr == b'f' && next1.is_some() && next2.is_some() && next3.is_some()
-                    {
-                        let next1 = next1.clone().unwrap();
-                        let next2 = next2.clone().unwrap();
-                        let next3 = next3.clone().unwrap();
-
-                        if next1 == b'o' && next2 == b'u' && next3 == b'r' {
-                            digits.push(4);
-                        } else if next1 == b'i' && next2 == b'v' && next3 == b'e' {
-                            digits.push(5);
-                        }
-                    } else if curr == b's' && next1.is_some() && next2.is_some() {
-                        let next1 = next1.clone().unwrap();
-                        let next2 = next2.clone().unwrap();
-
-                        if next1 == b'i' && next2 == b'x' {
-                            digits.push(6);
-                        } else if next3.is_some() && next4.is_some() {
-                            let next3 = next3.clone().unwrap();
-                            let next4 = next4.clone().unwrap();
-
-                            if next1 == b'e' && next2 == b'v' && next3 == b'e' && next4 == b'n' {
-                                digits.push(7);
-                            }
-                        }
-                    } else if curr == b'e'
-                        && next1.is_some()
-                        && next2.is_some()
-                        && next3.is_some()
-                        && next4.is_some()
-                    {
-                        let next1 = next1.clone().unwrap();
-                        let next2 = next2.clone().unwrap();
-                        let next3 = next3.clone().unwrap();
-                        let next4 = next4.clone().unwrap();
-
-                        if next1 == b'i' && next2 == b'g' && next3 == b'h' && next4 == b't' {
-                            digits.push(8);
-                        }
-                    } else if curr == b'n' && next1.is_some() && next2.is_some() && next3.is_some()
-                    {
-                        let next1 = next1.clone().unwrap();
-                        let next2 = next2.clone().unwrap();
-                        let next3 = next3.clone().unwrap();
-
-                        if next1 == b'i' && next2 == b'n' && next3 == b'e' {
-                            digits.push(9);
-                        }
+                if digit.is_some() {
+                    if digit1.is_none() {
+                        digit1 = digit;
                     }
+
+                    digit2 = digit;
                 }
             }
 
-            let digit1 = digits[0];
-            let digit2 = digits[digits.len() - 1];
+            let digit1 = digit1.unwrap();
+            let digit2 = digit2.unwrap();
             let digits = digit1 * 10 + digit2;
 
             digits as u32
