@@ -1,5 +1,5 @@
-#[aoc_runner_derive::aoc(day1, part1, Iterators)]
-pub fn solve_part1_iterators(input: &str) -> u32 {
+#[aoc_runner_derive::aoc(day1, part1)]
+pub fn solve_part1(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
@@ -11,7 +11,7 @@ pub fn solve_part1_iterators(input: &str) -> u32 {
 
             let digit1 = digits.next().unwrap();
             let digit2 = digits.last().unwrap_or(digit1);
-            let digits = digit1 * 10 + digit2;
+            let digits = digit1 * 10u8 + digit2;
 
             digits as u32
         })
@@ -36,15 +36,15 @@ pub fn solve_part2(input: &str) -> u32 {
                     line.get(i + 4),
                 ) {
                     (b'0'..=b'9', _, _, _, _) => Some(ch - b'0'),
-                    (b'o', Some(b'n'), Some(b'e'), _, _) => Some(1),
-                    (b't', Some(b'w'), Some(b'o'), _, _) => Some(2),
-                    (b't', Some(b'h'), Some(b'r'), Some(b'e'), Some(b'e')) => Some(3),
-                    (b'f', Some(b'o'), Some(b'u'), Some(b'r'), _) => Some(4),
-                    (b'f', Some(b'i'), Some(b'v'), Some(b'e'), _) => Some(5),
-                    (b's', Some(b'i'), Some(b'x'), _, _) => Some(6),
-                    (b's', Some(b'e'), Some(b'v'), Some(b'e'), Some(b'n')) => Some(7),
-                    (b'e', Some(b'i'), Some(b'g'), Some(b'h'), Some(b't')) => Some(8),
-                    (b'n', Some(b'i'), Some(b'n'), Some(b'e'), _) => Some(9),
+                    (b'o', Some(b'n'), Some(b'e'), _, _) => Some(1u8),
+                    (b't', Some(b'w'), Some(b'o'), _, _) => Some(2u8),
+                    (b't', Some(b'h'), Some(b'r'), Some(b'e'), Some(b'e')) => Some(3u8),
+                    (b'f', Some(b'o'), Some(b'u'), Some(b'r'), _) => Some(4u8),
+                    (b'f', Some(b'i'), Some(b'v'), Some(b'e'), _) => Some(5u8),
+                    (b's', Some(b'i'), Some(b'x'), _, _) => Some(6u8),
+                    (b's', Some(b'e'), Some(b'v'), Some(b'e'), Some(b'n')) => Some(7u8),
+                    (b'e', Some(b'i'), Some(b'g'), Some(b'h'), Some(b't')) => Some(8u8),
+                    (b'n', Some(b'i'), Some(b'n'), Some(b'e'), _) => Some(9u8),
                     _ => None,
                 };
 
@@ -59,7 +59,7 @@ pub fn solve_part2(input: &str) -> u32 {
 
             let digit1 = digit1.unwrap();
             let digit2 = digit2.unwrap();
-            let digits = digit1 * 10 + digit2;
+            let digits = digit1 * 10u8 + digit2;
 
             digits as u32
         })
@@ -69,9 +69,9 @@ pub fn solve_part2(input: &str) -> u32 {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_solve_part1_iterators_sample() {
+    fn test_solve_part1_sample() {
         assert_eq!(
-            super::solve_part1_iterators("1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet"),
+            super::solve_part1("1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet"),
             142
         )
     }
