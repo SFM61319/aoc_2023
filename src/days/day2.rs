@@ -68,3 +68,39 @@ pub fn generate_input(input: &str) -> Vec<Game> {
         })
         .collect()
 }
+
+#[inline]
+fn is_game_possible(game: &Game) -> bool {
+    const RED: u32 = 12u32;
+    const GREEN: u32 = 13u32;
+    const BLUE: u32 = 14u32;
+
+    game.sets
+        .iter()
+        .all(|game_set| game_set.red <= RED && game_set.green <= GREEN && game_set.blue <= BLUE)
+}
+
+#[inline]
+#[aoc_runner_derive::aoc(day2, part1)]
+pub fn solve_part1(input: &[Game]) -> u32 {
+    input
+        .iter()
+        .filter(|&game| is_game_possible(game))
+        .map(|game| game.id)
+        .sum()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_solve_part1_sample() {
+        let input = super::generate_input(
+            "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green",
+        );
+        assert_eq!(super::solve_part1(&input), 8)
+    }
+}
