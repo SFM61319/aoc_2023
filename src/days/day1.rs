@@ -23,29 +23,28 @@ pub fn solve_part2(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
-            let line = line.as_bytes();
             let mut digit1 = Option::<u8>::None;
             let mut digit2 = Option::<u8>::None;
 
-            for (i, ch) in line.iter().enumerate() {
-                let digit = match (
-                    ch,
-                    line.get(i + 1),
-                    line.get(i + 2),
-                    line.get(i + 3),
-                    line.get(i + 4),
-                ) {
-                    (b'0'..=b'9', _, _, _, _) => Some(ch - b'0'),
-                    (b'o', Some(b'n'), Some(b'e'), _, _) => Some(1u8),
-                    (b't', Some(b'w'), Some(b'o'), _, _) => Some(2u8),
-                    (b't', Some(b'h'), Some(b'r'), Some(b'e'), Some(b'e')) => Some(3u8),
-                    (b'f', Some(b'o'), Some(b'u'), Some(b'r'), _) => Some(4u8),
-                    (b'f', Some(b'i'), Some(b'v'), Some(b'e'), _) => Some(5u8),
-                    (b's', Some(b'i'), Some(b'x'), _, _) => Some(6u8),
-                    (b's', Some(b'e'), Some(b'v'), Some(b'e'), Some(b'n')) => Some(7u8),
-                    (b'e', Some(b'i'), Some(b'g'), Some(b'h'), Some(b't')) => Some(8u8),
-                    (b'n', Some(b'i'), Some(b'n'), Some(b'e'), _) => Some(9u8),
-                    _ => None,
+            for i in usize::MIN..line.len() {
+                let slice = &line[i..];
+                let digit = match slice {
+                    one if one.starts_with("one") => Some(1u8),
+                    two if two.starts_with("two") => Some(2u8),
+                    three if three.starts_with("three") => Some(3u8),
+                    four if four.starts_with("four") => Some(4u8),
+                    five if five.starts_with("five") => Some(5u8),
+                    six if six.starts_with("six") => Some(6u8),
+                    seven if seven.starts_with("seven") => Some(7u8),
+                    eight if eight.starts_with("eight") => Some(8u8),
+                    nine if nine.starts_with("nine") => Some(9u8),
+                    _ => {
+                        let digit = slice.bytes().next().unwrap();
+                        match digit {
+                            b'0'..=b'9' => Some(digit),
+                            _ => None,
+                        }
+                    }
                 };
 
                 if digit.is_some() {
