@@ -26,7 +26,7 @@ fn parse_set(set: &str) -> GameSet {
     let mut green = u32::MIN;
     let mut blue = u32::MIN;
 
-    set.split(COLOR_SEPARATOR).for_each(|color_count| {
+    for color_count in set.split(COLOR_SEPARATOR) {
         let mut color_count = color_count.trim().split(COLOR_COUNT_SEPARATOR);
 
         let count = color_count.next().unwrap().parse::<u32>().unwrap();
@@ -38,7 +38,7 @@ fn parse_set(set: &str) -> GameSet {
             "blue" => blue += count,
             _ => unreachable!(),
         }
-    });
+    }
     GameSet::new(red, green, blue)
 }
 
