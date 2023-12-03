@@ -16,7 +16,7 @@ fn get_line_or<'a>(lines: &'a [&'a str], line_no: usize, default: &'a str) -> &'
 
 #[inline]
 fn is_part(ch: u8) -> bool {
-    ch != b'.' && !(b'0'..=b'9').contains(&ch)
+    ch != b'.' && !ch.is_ascii_digit()
 }
 
 fn get_part_numbers(lines: &[&str], line_no: usize, curr_line: &str) -> u32 {
@@ -166,11 +166,10 @@ fn get_gears(lines: &[&str]) -> HashMap<Coords, Vec<u32>> {
                 }
             } else {
                 for &surrounding_gear in &surrounding_gears {
-                    if !gears.contains_key(&surrounding_gear) {
-                        gears.insert(surrounding_gear, Vec::new());
-                    }
-
-                    gears.get_mut(&surrounding_gear).unwrap().push(curr_number);
+                    gears
+                        .entry(surrounding_gear)
+                        .or_insert_with(Vec::new)
+                        .push(curr_number);
                 }
 
                 curr_number = u32::MIN;
@@ -179,11 +178,10 @@ fn get_gears(lines: &[&str]) -> HashMap<Coords, Vec<u32>> {
         }
 
         for &surrounding_gear in &surrounding_gears {
-            if !gears.contains_key(&surrounding_gear) {
-                gears.insert(surrounding_gear, Vec::new());
-            }
-
-            gears.get_mut(&surrounding_gear).unwrap().push(curr_number);
+            gears
+                .entry(surrounding_gear)
+                .or_insert_with(Vec::new)
+                .push(curr_number);
         }
     }
 
