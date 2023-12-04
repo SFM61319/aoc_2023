@@ -60,10 +60,14 @@ pub fn solve_part1(input: &[Card]) -> u32 {
 }
 
 fn scratch_card(card_no: usize, card: &Card, card_counts: &mut [u32]) {
+    let card_count = card_counts[card_no];
     let next_cards_count = card.count_common_numbers() as usize;
-    for i in usize::MIN..next_cards_count {
-        card_counts[card_no + i + 1] += card_counts[card_no];
-    }
+
+    card_counts
+        .iter_mut()
+        .skip(card_no + 1)
+        .take(next_cards_count)
+        .for_each(|next_card_count| *next_card_count += card_count);
 }
 
 #[aoc_runner_derive::aoc(day4, part2)]
