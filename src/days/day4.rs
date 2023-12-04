@@ -1,17 +1,17 @@
-use std::collections::HashSet;
+use ahash::AHashSet;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Card {
-    winning_numbers: HashSet<u32>,
-    current_numbers: HashSet<u32>,
+    winning_numbers: AHashSet<u32>,
+    current_numbers: AHashSet<u32>,
 }
 
 impl Card {
     #[inline]
     pub fn new() -> Self {
         Self {
-            winning_numbers: HashSet::new(),
-            current_numbers: HashSet::new(),
+            winning_numbers: AHashSet::new(),
+            current_numbers: AHashSet::new(),
         }
     }
 
@@ -42,7 +42,7 @@ impl Card {
     }
 
     #[inline]
-    fn parse_numbers(numbers: &str, number_set: &mut HashSet<u32>) {
+    fn parse_numbers(numbers: &str, number_set: &mut AHashSet<u32>) {
         let numbers = numbers
             .trim()
             .split_ascii_whitespace()
