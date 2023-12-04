@@ -16,7 +16,7 @@ impl Card {
     }
 
     #[inline]
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse_str(s: &str) -> Self {
         let mut card = Self::new();
         let mut numbers = s.split(':').last().unwrap().split('|');
 
@@ -24,6 +24,21 @@ impl Card {
         Card::parse_numbers(numbers.next().unwrap(), &mut card.current_numbers);
 
         card
+    }
+
+    #[inline]
+    fn get_points(&self) -> u32 {
+        const TWO: u32 = 2;
+        let common_count = self
+            .current_numbers
+            .intersection(&self.winning_numbers)
+            .count() as u32;
+
+        if common_count == u32::MIN {
+            common_count
+        } else {
+            TWO.pow(common_count - 1)
+        }
     }
 
     #[inline]
@@ -40,28 +55,13 @@ impl Card {
 #[inline]
 #[aoc_runner_derive::aoc_generator(day4)]
 pub fn generate_input(input: &str) -> Vec<Card> {
-    input.lines().map(Card::from_str).collect()
-}
-
-#[inline]
-fn get_points(card: &Card) -> u32 {
-    const TWO: u32 = 2;
-    let common_count = card
-        .current_numbers
-        .intersection(&card.winning_numbers)
-        .count() as u32;
-
-    if common_count == u32::MIN {
-        common_count
-    } else {
-        TWO.pow(common_count - 1)
-    }
+    input.lines().map(Card::parse_str).collect()
 }
 
 #[inline]
 #[aoc_runner_derive::aoc(day4, part1)]
 pub fn solve_part1(input: &[Card]) -> u32 {
-    input.iter().map(get_points).sum()
+    input.iter().map(Card::get_points).sum()
 }
 
 #[cfg(test)]
