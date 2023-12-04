@@ -31,13 +31,7 @@ impl Card {
 
     #[inline]
     const fn get_points(&self) -> u32 {
-        const TWO: u32 = 2;
-        let common_count = self.count_common_numbers();
-
-        match common_count {
-            u32::MIN => common_count,
-            _ => TWO.pow(common_count - 1),
-        }
+        (1 << self.count_common_numbers()) >> 1
     }
 
     #[inline]
