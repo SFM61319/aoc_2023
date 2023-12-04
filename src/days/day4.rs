@@ -1,17 +1,15 @@
-use ahash::AHashSet;
-
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Card {
-    winning_numbers: AHashSet<u32>,
-    current_numbers: AHashSet<u32>,
+    winning_numbers: u128,
+    current_numbers: u128,
 }
 
 impl Card {
     #[inline]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
-            winning_numbers: AHashSet::new(),
-            current_numbers: AHashSet::new(),
+            winning_numbers: u128::MIN,
+            current_numbers: u128::MIN,
         }
     }
 
@@ -29,26 +27,23 @@ impl Card {
     #[inline]
     fn get_points(&self) -> u32 {
         const TWO: u32 = 2;
-        let common_count = self
-            .current_numbers
-            .intersection(&self.winning_numbers)
-            .count() as u32;
 
-        if common_count == u32::MIN {
-            common_count
-        } else {
-            TWO.pow(common_count - 1)
+        let common = self.winning_numbers & self.current_numbers;
+        let common_count = common.count_ones();
+
+        match common_count {
+            u32::MIN => common_count,
+            _ => TWO.pow(common_count - 1),
         }
     }
 
     #[inline]
-    fn parse_numbers(numbers: &str, number_set: &mut AHashSet<u32>) {
-        let numbers = numbers
+    fn parse_numbers(numbers: &str, number_set: &mut u128) {
+        numbers
             .trim()
             .split_ascii_whitespace()
-            .map(|num| num.parse::<u32>().unwrap());
-
-        number_set.extend(numbers);
+            .map(|num| num.parse::<u32>().unwrap())
+            .for_each(|num| *number_set |= 1 << num);
     }
 }
 
