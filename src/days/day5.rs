@@ -208,7 +208,7 @@ pub struct BigAlmanac {
 
 impl BigAlmanac {
     #[inline]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::with(
             Vec::new(),
             Vec::new(),
@@ -223,7 +223,7 @@ impl BigAlmanac {
 
     #[inline]
     #[allow(clippy::too_many_arguments)]
-    pub fn with(
+    pub const fn with(
         seed_ranges: Vec<SrcRange>,
         seed_to_soil: Vec<SrcDstRangeMap>,
         soil_to_fertilizer: Vec<SrcDstRangeMap>,
