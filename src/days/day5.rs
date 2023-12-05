@@ -1,17 +1,36 @@
-use std::str::Lines;
+use std::{ops::Range, str::Lines};
 
-use ahash::AHashMap;
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SrcDstRangeMap {
+    src_range: Range<i64>,
+    dst_range: Range<i64>,
+}
+
+impl SrcDstRangeMap {
+    #[inline]
+    pub fn new() -> Self {
+        Self::with(Range::default(), Range::default())
+    }
+
+    #[inline]
+    pub const fn with(src_range: Range<i64>, dst_range: Range<i64>) -> Self {
+        Self {
+            src_range,
+            dst_range,
+        }
+    }
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Almanac {
-    seeds: Vec<u32>,
-    seed_to_soil: AHashMap<u32, u32>,
-    soil_to_fertilizer: AHashMap<u32, u32>,
-    fertilizer_to_water: AHashMap<u32, u32>,
-    water_to_light: AHashMap<u32, u32>,
-    light_to_temperature: AHashMap<u32, u32>,
-    temperature_to_humidity: AHashMap<u32, u32>,
-    humidity_to_location: AHashMap<u32, u32>,
+    seeds: Vec<i64>,
+    seed_to_soil: Vec<SrcDstRangeMap>,
+    soil_to_fertilizer: Vec<SrcDstRangeMap>,
+    fertilizer_to_water: Vec<SrcDstRangeMap>,
+    water_to_light: Vec<SrcDstRangeMap>,
+    light_to_temperature: Vec<SrcDstRangeMap>,
+    temperature_to_humidity: Vec<SrcDstRangeMap>,
+    humidity_to_location: Vec<SrcDstRangeMap>,
 }
 
 impl Almanac {
@@ -19,27 +38,27 @@ impl Almanac {
     pub fn new() -> Self {
         Self::with(
             Vec::new(),
-            AHashMap::new(),
-            AHashMap::new(),
-            AHashMap::new(),
-            AHashMap::new(),
-            AHashMap::new(),
-            AHashMap::new(),
-            AHashMap::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
         )
     }
 
     #[inline]
     #[allow(clippy::too_many_arguments)]
     pub fn with(
-        seeds: Vec<u32>,
-        seed_to_soil: AHashMap<u32, u32>,
-        soil_to_fertilizer: AHashMap<u32, u32>,
-        fertilizer_to_water: AHashMap<u32, u32>,
-        water_to_light: AHashMap<u32, u32>,
-        light_to_temperature: AHashMap<u32, u32>,
-        temperature_to_humidity: AHashMap<u32, u32>,
-        humidity_to_location: AHashMap<u32, u32>,
+        seeds: Vec<i64>,
+        seed_to_soil: Vec<SrcDstRangeMap>,
+        soil_to_fertilizer: Vec<SrcDstRangeMap>,
+        fertilizer_to_water: Vec<SrcDstRangeMap>,
+        water_to_light: Vec<SrcDstRangeMap>,
+        light_to_temperature: Vec<SrcDstRangeMap>,
+        temperature_to_humidity: Vec<SrcDstRangeMap>,
+        humidity_to_location: Vec<SrcDstRangeMap>,
     ) -> Self {
         Self {
             seeds,
@@ -93,7 +112,7 @@ impl Almanac {
     }
 
     #[inline]
-    fn parse_seeds(seeds: &str) -> Vec<u32> {
+    fn parse_seeds(seeds: &str) -> Vec<i64> {
         seeds
             .split(':')
             .last()
@@ -104,30 +123,36 @@ impl Almanac {
             .collect()
     }
 
-    fn parse_maps(lines: &mut Lines) -> AHashMap<u32, u32> {
-        let mut map = AHashMap::<u32, u32>::new();
+    fn parse_maps(lines: &mut Lines) -> Vec<SrcDstRangeMap> {
+        let mut maps = Vec::new();
         for line in lines.take_while(|&line| !line.is_empty()) {
-            let (dest_range_start, src_range_start, range_len) = Self::parse_range(line);
-            for i in u32::MIN..range_len {
-                map.insert(src_range_start + i, dest_range_start + i);
-            }
+            let (src_range_start, dst_range_start, range_len) = Self::parse_range(line);
+
+            let src_range_end = src_range_start + range_len;
+            let dst_range_end = dst_range_start + range_len;
+
+            let src_range = src_range_start..src_range_end;
+            let dst_range = dst_range_start..dst_range_end;
+
+            let map = SrcDstRangeMap::with(src_range, dst_range);
+            maps.push(map);
         }
 
-        map
+        maps
     }
 
     #[inline]
-    fn parse_range(range: &str) -> (u32, u32, u32) {
+    fn parse_range(range: &str) -> (i64, i64, i64) {
         let range = range
             .trim()
             .split_ascii_whitespace()
             .map(|num| num.parse().unwrap())
-            .collect::<Vec<u32>>();
+            .collect::<Vec<i64>>();
 
-        (range[0], range[1], range[2])
+        (range[1], range[0], range[2])
     }
 
-    fn get_nearest_location(&self) -> u32 {
+    fn get_nearest_location(&self) -> i64 {
         self.seeds
             .iter()
             .map(|&seed| self.get_seed_location(seed))
@@ -135,7 +160,7 @@ impl Almanac {
             .unwrap()
     }
 
-    fn get_seed_location(&self, seed: u32) -> u32 {
+    fn get_seed_location(&self, seed: i64) -> i64 {
         let soil = Self::get_map_value_or(&self.seed_to_soil, seed);
         let fertilizer = Self::get_map_value_or(&self.soil_to_fertilizer, soil);
         let water = Self::get_map_value_or(&self.fertilizer_to_water, fertilizer);
@@ -147,11 +172,17 @@ impl Almanac {
     }
 
     #[inline]
-    fn get_map_value_or(hash_map: &AHashMap<u32, u32>, key_and_default: u32) -> u32 {
-        hash_map
-            .get(&key_and_default)
-            .copied()
-            .unwrap_or(key_and_default)
+    fn get_map_value_or(maps: &[SrcDstRangeMap], key_and_default: i64) -> i64 {
+        maps.iter()
+            .find(|&map| map.src_range.contains(&key_and_default))
+            .map_or(key_and_default, |map| {
+                Self::get_map_value(map, key_and_default)
+            })
+    }
+
+    #[inline]
+    const fn get_map_value(map: &SrcDstRangeMap, key_and_default: i64) -> i64 {
+        key_and_default + map.dst_range.start - map.src_range.start
     }
 }
 
@@ -163,7 +194,7 @@ pub fn generate_input(input: &str) -> Almanac {
 
 #[inline]
 #[aoc_runner_derive::aoc(day5, part1)]
-pub fn solve_part1(input: &Almanac) -> u32 {
+pub fn solve_part1(input: &Almanac) -> i64 {
     input.get_nearest_location()
 }
 
