@@ -20,24 +20,26 @@ impl Race {
 
     #[inline]
     pub fn get_number_of_ways_to_win(&self) -> u64 {
-        let hold_times = u64::MIN..=self.allowed_time;
-        hold_times
-            .map(|hold_time| self.get_distance_after(hold_time))
-            .filter(|&distance| self.can_win(distance))
-            .count() as u64
-    }
+        // hold_time * (allowed_time - hold_time) < distance_record
+        // =>  x * (t - x) < d
+        // => tx - x^2 < d
+        // => tx - x^2 - d < 0
+        // => -tx + x^2 + d > 0
+        // => x^2 - tx + d > 0
+        // a = 1, b = -t, c = d
+        // disc = b^2 - 4ac = (-t)^2 - 4(1)(d) = t^2 - 4d
+        // x = (-b +- sqrt(disc)) / 2a = (t +- sqrt(disc)) / 2
 
-    #[inline]
-    const fn get_distance_after(&self, hold_time: u64) -> u64 {
-        let speed = hold_time;
-        let remaining_time = self.allowed_time - hold_time;
+        let disc = self.allowed_time.pow(2) - 4 * self.distance_record;
+        let disc = (disc as f64).sqrt() - 2.0f64;
 
-        speed * remaining_time
-    }
+        let x1 = (self.allowed_time as f64 + disc) / 2.0f64;
+        let x2 = (self.allowed_time as f64 - disc) / 2.0f64;
 
-    #[inline]
-    const fn can_win(&self, distance: u64) -> bool {
-        distance > self.distance_record
+        let x1 = x1.ceil() as u64;
+        let x2 = x2.floor() as u64;
+
+        x1 - x2 + 1
     }
 }
 
