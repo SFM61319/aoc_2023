@@ -1,62 +1,111 @@
-use std::cmp::Ordering;
+use std::array;
 
-#[inline]
-fn card_cmp(card_a: u8, card_b: u8, ordering: &[u8; 35]) -> Ordering {
-    ordering[card_a as usize].cmp(&ordering[card_b as usize])
+const fn evaluate_card(card: u8) -> u8 {
+    match card {
+        b'2'..=b'9' => card - b'0',
+        b'T' => 10,
+        b'J' => 11,
+        b'Q' => 12,
+        b'K' => 13,
+        b'A' => 14,
+        _ => unreachable!(),
+    }
 }
 
-#[inline]
-fn hand_cmp(hand_a: &str, hand_b: &str, card_ordering: &[u8; 35]) -> Ordering {
-    hand_a
-        .bytes()
-        .zip(hand_b.bytes())
-        .fold(Ordering::Equal, |ordering, (card_a, card_b)| {
-            ordering.then_with(|| card_cmp(card_a - b'2', card_b - b'2', card_ordering))
-        })
+fn count_cards(cards: [u8; 5]) -> (usize, u64) {
+    let mut counts = [(u8::MIN, u64::MIN); 5];
+    let mut unique_count = 0;
+    let mut joker_count = 0;
+
+    'card: for card in cards {
+        if card == 1 {
+            joker_count += 1;
+            continue;
+        }
+
+        for (counted_card, card_count) in counts.iter_mut() {
+            if *counted_card == card {
+                *card_count += 1;
+                continue 'card;
+            }
+        }
+
+        counts[unique_count] = (card, 1);
+        unique_count += 1;
+    }
+
+    let largest_count = counts
+        .into_iter()
+        .max_by_key(|(_, count)| *count)
+        .unwrap()
+        .1;
+    (unique_count, largest_count + joker_count)
 }
 
-#[inline]
-fn hand_bid_pair_cmp(
-    pair_a: &([u8; 35], &str, u64),
-    pair_b: &([u8; 35], &str, u64),
-    card_ordering: &[u8; 35],
-) -> Ordering {
-    pair_a
-        .0
-        .cmp(&pair_b.0)
-        .then_with(|| hand_cmp(pair_a.1, pair_b.1, card_ordering))
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum HandType {
+    HighCard,
+    OnePair,
+    TwoPair,
+    ThreeOfAKind,
+    FullHouse,
+    FourOfAKind,
+    FiveOfAKind,
+}
+
+impl HandType {
+    fn from_cards(cards: [u8; 5]) -> Self {
+        match count_cards(cards) {
+            (5, 1) => Self::HighCard,
+            (4, 2) => Self::OnePair,
+            (3, 2) => Self::TwoPair,
+            (3, 3) => Self::ThreeOfAKind,
+            (2, 3) => Self::FullHouse,
+            (2, 4) => Self::FourOfAKind,
+            (0 | 1, 5) => Self::FiveOfAKind,
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Hand {
+    hand_type: HandType,
+    cards: [u8; 5],
+    bid: u64,
+}
+
+impl Hand {
+    #[inline]
+    pub const fn with(hand_type: HandType, cards: [u8; 5], bid: u64) -> Self {
+        Self {
+            hand_type,
+            cards,
+            bid,
+        }
+    }
+
+    pub fn parse(s: &str) -> Self {
+        let (cards, bid) = s.trim().split_once(' ').unwrap();
+        let cards = cards.as_bytes();
+        let bid = bid.parse().unwrap();
+
+        let cards = array::from_fn(|i| evaluate_card(cards[i]));
+        let hand_type = HandType::from_cards(cards);
+
+        Self::with(hand_type, cards, bid)
+    }
 }
 
 #[aoc_runner_derive::aoc(day7, part1)]
 pub fn solve_part1(input: &str) -> u64 {
-    const ORDERING: [u8; 35] = [
-        1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 10, 12, 0, 0, 0,
-        0, 0, 11, 0, 0, 9,
-    ];
-    let mut hand_bid_pairs = input
-        .lines()
-        .map(|line| {
-            let (hand, bid) = line.trim().split_once(' ').unwrap();
-            let bid = bid.parse().unwrap();
+    let mut hands = input.lines().map(Hand::parse).collect::<Vec<_>>();
 
-            let mut card_count = [u8::MIN; 35];
-            for ch in hand.bytes() {
-                let i = (ch - b'2') as usize;
-                card_count[i] += 1;
-            }
-
-            card_count.sort();
-            card_count.reverse();
-
-            (card_count, hand, bid)
-        })
-        .collect::<Vec<([u8; 35], &str, u64)>>();
-
-    hand_bid_pairs.sort_by(|pair_a, pair_b| hand_bid_pair_cmp(pair_a, pair_b, &ORDERING));
-    hand_bid_pairs
+    hands.sort();
+    hands
         .into_iter()
         .enumerate()
-        .map(|(rank, (_, _, bid))| bid * (1 + rank as u64))
+        .map(|(rank, hand)| hand.bid * (1 + rank as u64))
         .sum()
 }
 
