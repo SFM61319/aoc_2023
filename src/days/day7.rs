@@ -1,10 +1,16 @@
 use std::array;
 
-const fn evaluate_card(card: u8) -> u8 {
+const fn evaluate_card(card: u8, has_joker: bool) -> u8 {
     match card {
         b'2'..=b'9' => card - b'0',
         b'T' => 10,
-        b'J' => 11,
+        b'J' => {
+            if has_joker {
+                1
+            } else {
+                11
+            }
+        }
         b'Q' => 12,
         b'K' => 13,
         b'A' => 14,
@@ -85,28 +91,44 @@ impl Hand {
         }
     }
 
-    pub fn parse(s: &str) -> Self {
+    pub fn parse_all(input: &str, has_joker: bool) -> Vec<Self> {
+        input
+            .lines()
+            .map(|line| Hand::parse(line, has_joker))
+            .collect()
+    }
+
+    pub fn parse(s: &str, has_joker: bool) -> Self {
         let (cards, bid) = s.trim().split_once(' ').unwrap();
         let cards = cards.as_bytes();
         let bid = bid.parse().unwrap();
 
-        let cards = array::from_fn(|i| evaluate_card(cards[i]));
+        let cards = array::from_fn(|i| evaluate_card(cards[i], has_joker));
         let hand_type = HandType::from_cards(cards);
 
         Self::with(hand_type, cards, bid)
     }
 }
 
-#[aoc_runner_derive::aoc(day7, part1)]
-pub fn solve_part1(input: &str) -> u64 {
-    let mut hands = input.lines().map(Hand::parse).collect::<Vec<_>>();
-
+fn get_winnings(hands: &mut [Hand]) -> u64 {
     hands.sort();
     hands
-        .into_iter()
+        .iter()
         .enumerate()
         .map(|(rank, hand)| hand.bid * (1 + rank as u64))
         .sum()
+}
+
+#[aoc_runner_derive::aoc(day7, part1)]
+pub fn solve_part1(input: &str) -> u64 {
+    let mut hands = Hand::parse_all(input, false);
+    get_winnings(&mut hands)
+}
+
+#[aoc_runner_derive::aoc(day7, part2)]
+pub fn solve_part2(input: &str) -> u64 {
+    let mut hands = Hand::parse_all(input, true);
+    get_winnings(&mut hands)
 }
 
 #[cfg(test)]
@@ -119,5 +141,15 @@ KK677 28
 KTJJT 220
 QQQJA 483";
         assert_eq!(super::solve_part1(input), 6440)
+    }
+
+    #[test]
+    fn test_solve_part2_sample() {
+        let input = "32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483";
+        assert_eq!(super::solve_part2(input), 5905)
     }
 }
